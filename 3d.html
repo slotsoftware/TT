@@ -175,13 +175,16 @@
 
         /* --- 1. DATOS ESTÁTICOS (TRACK DEFINITIONS) --- */
         const TRACK_DEFINITIONS = {
-          NINCO: { name: 'NINCO', themeColor: 'red', neonColor: '#ef4444', uiClass: 'border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:bg-red-950/30', activeClass: 'bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500', trackColor: '#000000', railColor: '#dcdcdc', slotColor: '#000000', width: 18.0, laneSpacing: 9.0, connectionBoxColor: '#ef4444' },
+          NINCO: { name: 'NINCO', themeColor: 'red', neonColor: '#ef4444', uiClass: 'border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:bg-red-950/30', activeClass: 'bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500', trackColor: '#121212', railColor: '#dcdcdc', slotColor: '#000000', width: 18.0, laneSpacing: 9.0, connectionBoxColor: '#ef4444' },
           SCX_ANALOG: { name: 'SCALEXTRIC', themeColor: 'yellow', neonColor: '#facc15', uiClass: 'border-yellow-500/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:bg-yellow-950/30', activeClass: 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(250,204,21,0.6)] border-yellow-400 font-bold', trackColor: '#5a5a5a', railColor: '#d0d0d0', slotColor: '#1a1a1a', width: 15.6, laneSpacing: 7.7, connectionBoxColor: '#ef4444' },
-          SCX_CLASSIC: { name: 'SCX CLASSIC', themeColor: 'yellow', neonColor: '#facc15', uiClass: 'border-yellow-500/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:bg-yellow-950/30', activeClass: 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(250,204,21,0.6)] border-yellow-400 font-bold', trackColor: '#262626', railColor: '#a0a0a0', slotColor: '#000000', width: 15.6, laneSpacing: 7.7, connectionBoxColor: '#ef4444' },
+          SCX_CLASSIC: { name: 'SCX CLASSIC', themeColor: 'yellow', neonColor: '#facc15', uiClass: 'border-yellow-500/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] hover:bg-yellow-950/30', activeClass: 'bg-yellow-500 text-black shadow-[0_0_20px_rgba(250,204,21,0.6)] border-yellow-400 font-bold', trackColor: '#141414', railColor: '#a0a0a0', slotColor: '#000000', width: 15.6, laneSpacing: 7.7, connectionBoxColor: '#ef4444' },
           SCX_ADVANCE: { name: 'SCX ADVANCE', themeColor: 'blue', neonColor: '#3b82f6', uiClass: 'border-blue-500/50 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:bg-blue-950/30', activeClass: 'bg-blue-600 text-white shadow-[0_0_20px_rgba(59,130,246,0.6)] border-blue-400 font-bold', trackColor: '#5a5a5a', railColor: '#d0d0d0', slotColor: '#1a1a1a', width: 15.6, laneSpacing: 7.7, connectionBoxColor: '#ef4444' },
-          CARRERA: { name: 'CARRERA', themeColor: 'red', neonColor: '#ef4444', uiClass: 'border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:bg-red-950/30', activeClass: 'bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500', trackColor: '#000000', railColor: '#e0e0e0', slotColor: '#000000', width: 19.8, laneSpacing: 9.9, connectionBoxColor: '#ef4444' },
-          POLICAR: { name: 'POLICAR', themeColor: 'orange', neonColor: '#f97316', uiClass: 'border-orange-500/50 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:bg-orange-950/30', activeClass: 'bg-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.6)] border-orange-500 font-bold', trackColor: '#000000', railColor: '#dcdcdc', slotColor: '#000000', width: 17.9, laneSpacing: 9.0, connectionBoxColor: '#333' },
-          SCALEAUTO: { name: 'SCALEAUTO', themeColor: 'lime', neonColor: '#84cc16', uiClass: 'border-lime-500/50 text-lime-400 shadow-[0_0_15px_rgba(132,204,22,0.3)] hover:bg-lime-950/30', activeClass: 'bg-lime-500 text-black shadow-[0_0_20px_rgba(132,204,22,0.6)] border-lime-400 font-bold', trackColor: '#333333', railColor: '#e0e0e0', slotColor: '#111111', width: 20.0, laneSpacing: 10.0, connectionBoxColor: '#9ca3af' },
+          SCALEXTRIC_UK: { name: 'SCALEXTRIC UK', themeColor: 'green', neonColor: '#22c55e', uiClass: 'border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:bg-green-950/30', activeClass: 'bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.6)] border-green-500 font-bold', trackColor: '#121212', railColor: '#dcdcdc', slotColor: '#000000', width: 15.6, laneSpacing: 7.8, connectionBoxColor: '#22c55e' },
+          SCX_UK: { name: 'SCALEXTRIC UK', themeColor: 'green', neonColor: '#22c55e', uiClass: 'border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:bg-green-950/30', activeClass: 'bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.6)] border-green-500 font-bold', trackColor: '#121212', railColor: '#dcdcdc', slotColor: '#000000', width: 15.6, laneSpacing: 7.8, connectionBoxColor: '#22c55e' },
+          HORNBY: { name: 'SCALEXTRIC UK', themeColor: 'green', neonColor: '#22c55e', uiClass: 'border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.3)] hover:bg-green-950/30', activeClass: 'bg-green-600 text-white shadow-[0_0_20px_rgba(34,197,94,0.6)] border-green-500 font-bold', trackColor: '#121212', railColor: '#dcdcdc', slotColor: '#000000', width: 15.6, laneSpacing: 7.8, connectionBoxColor: '#22c55e' },
+          CARRERA: { name: 'CARRERA', themeColor: 'red', neonColor: '#ef4444', uiClass: 'border-red-500/50 text-red-400 shadow-[0_0_15px_rgba(239,68,68,0.3)] hover:bg-red-950/30', activeClass: 'bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.6)] border-red-500', trackColor: '#121212', railColor: '#e0e0e0', slotColor: '#000000', width: 19.8, laneSpacing: 9.9, connectionBoxColor: '#ef4444' },
+          POLICAR: { name: 'POLICAR', themeColor: 'orange', neonColor: '#f97316', uiClass: 'border-orange-500/50 text-orange-400 shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:bg-orange-950/30', activeClass: 'bg-orange-600 text-white shadow-[0_0_20px_rgba(249,115,22,0.6)] border-orange-500 font-bold', trackColor: '#121212', railColor: '#dcdcdc', slotColor: '#000000', width: 17.9, laneSpacing: 9.0, connectionBoxColor: '#333' },
+          SCALEAUTO: { name: 'SCALEAUTO', themeColor: 'lime', neonColor: '#84cc16', uiClass: 'border-lime-500/50 text-lime-400 shadow-[0_0_15px_rgba(132,204,22,0.3)] hover:bg-lime-950/30', activeClass: 'bg-lime-500 text-black shadow-[0_0_20px_rgba(132,204,22,0.6)] border-lime-400 font-bold', trackColor: '#5a5a5a', railColor: '#e0e0e0', slotColor: '#111111', width: 20.0, laneSpacing: 10.0, connectionBoxColor: '#9ca3af' },
           ADAPTER: { trackColor: '#2a2a2a' }
         };
 
@@ -3872,14 +3875,15 @@
                     const cv = document.createElement('canvas'); 
                     cv.width = 256; cv.height = 256; 
                     const cx = cv.getContext('2d'); 
-                    cx.fillStyle = bc || '#080808'; 
+                    cx.fillStyle = bc || '#121212'; 
                     cx.fillRect(0, 0, 256, 256); 
-                    for (let i = 0; i < 8000; i++) { // Reducido de 15.000 a 8.000 para cargar más rápido
+                    for (let i = 0; i < 6000; i++) {
                         const v = Math.random() > 0.5 ? 255 : 0; 
-                        cx.fillStyle = `rgba(${v}, ${v}, ${v}, 0.04)`; 
+                        cx.fillStyle = `rgba(${v}, ${v}, ${v}, 0.025)`; 
                         cx.fillRect(Math.random() * 256, Math.random() * 256, 1.5, 1.5); 
                     } 
                     const t = new THREE.CanvasTexture(cv); 
+                    t.encoding = THREE.sRGBEncoding;
                     t.wrapS = THREE.RepeatWrapping; 
                     t.wrapT = THREE.RepeatWrapping; 
                     if(r && r.capabilities && r.capabilities.getMaxAnisotropy) {
@@ -4154,13 +4158,26 @@
                     const trackGroup = new THREE.Group(); 
                     
                     const getBrandColors = (brandKey) => {
-                        const def = TRACK_DEFINITIONS[brandKey] || TRACK_DEFINITIONS.NINCO;
-                        const mixed = circuitData.mixedBrands && circuitData.mixedBrands[brandKey];
-                        const rootColors = (brandKey === circuitData.brand) ? circuitData.brandColors : null;
+                        if (brandKey === 'SCX_CLASSIC_YELLOW') {
+                            return {
+                                trackColor: '#eab308',
+                                railColor: '#a0a0a0',
+                                slotColor: '#000000'
+                            };
+                        }
+                        const key = (brandKey || 'NINCO').toUpperCase();
+                        const def = TRACK_DEFINITIONS[key] || TRACK_DEFINITIONS.NINCO;
+                        const isGreyBrand = ['SCX_ANALOG', 'SCX_ADVANCE', 'SCALEAUTO'].includes(key);
+                        const isBlackBrand = ['NINCO', 'SCX_CLASSIC', 'SCALEXTRIC_UK', 'SCX_UK', 'HORNBY', 'POLICAR', 'CARRERA'].includes(key);
+                        
+                        let finalTrackColor = def.trackColor;
+                        if (isGreyBrand) finalTrackColor = '#5a5a5a';
+                        else if (isBlackBrand) finalTrackColor = '#141414';
+
                         return {
-                            trackColor: (mixed && mixed.trackColor) || (rootColors && rootColors.trackColor) || def.trackColor,
-                            railColor: (mixed && mixed.railColor) || (rootColors && rootColors.railColor) || def.railColor,
-                            slotColor: (mixed && mixed.slotColor) || (rootColors && rootColors.slotColor) || def.slotColor
+                            trackColor: finalTrackColor,
+                            railColor: def.railColor || '#dcdcdc',
+                            slotColor: def.slotColor || '#000000'
                         };
                     };
 
@@ -4389,7 +4406,7 @@
                                         stdHalfL = halfAsphalt;
                                         stdHalfR = halfAsphalt;
                                     }
-                                    const isChicaneCont = ['chicane_middle', 'chicane_exit', 'chicane3_middle', 'chicane3_exit', 'single_lane_s', 'y_merge_in'].includes(p.subtype) || p.id === 'adv_chicane_mid' || p.id === 'adv_desvio_out';
+                                    const isChicaneCont = ['chicane_middle', 'chicane_curve', 'chicane_exit', 'chicane3_middle', 'chicane3_exit', 'single_lane_s', 'y_merge_in'].includes(p.subtype) || p.id === 'adv_chicane_mid' || p.id === 'adv_desvio_out';
                                     if (!isChicaneCont) {
                                         currentOffsets = [...tL];
                                     }
@@ -4397,7 +4414,8 @@
                             }
                         }
                         
-                        let pieceBrand = currentBrandKey;
+                        const isSqueeze = p.subtype === 'squeeze' || p.id === 'c_pt54_2';
+                        let pieceBrand = isSqueeze ? 'SCX_CLASSIC_YELLOW' : currentBrandKey;
                         let brandChangedLocal = false;
                         if (currentGeoData && currentGeoData.brand !== pieceBrand) {
                             brandChangedLocal = true;
@@ -4407,10 +4425,9 @@
                         const isPitEntry = p.type === 'pit_entry' || p.subtype === 'pit_entry';
                         const isPitExit = p.type === 'pit_exit' || p.subtype === 'pit_exit';
                         const isChicaneEntry = p.subtype === 'chicane_entry' || p.subtype === 'chicane3_entry';
-                        const isChicaneMiddle = p.subtype === 'chicane_middle' || p.subtype === 'chicane3_middle';
+                        const isChicaneMiddle = p.subtype === 'chicane_middle' || p.subtype === 'chicane3_middle' || p.subtype === 'chicane_curve';
                         const isChicaneExit = p.subtype === 'chicane_exit' || p.subtype === 'chicane3_exit';
                         const isFullChicane = p.subtype === 'full_chicane';
-                        const isAdvFullChicane = isFullChicane && (pieceBrand === 'SCX_ADVANCE' || p.id === 'adv_macro_chicane');
                         const isAdvChicaneIn = p.id === 'adv_desvio_in' || (pieceBrand === 'SCX_ADVANCE' && p.subtype === 'y_merge_out');
                         const isAdvChicaneMid = p.id === 'adv_chicane_mid' || (pieceBrand === 'SCX_ADVANCE' && p.subtype === 'single_lane_s');
                         const isAdvChicaneOut = p.id === 'adv_desvio_out' || (pieceBrand === 'SCX_ADVANCE' && p.subtype === 'y_merge_in');
@@ -4489,13 +4506,8 @@
                             currentOffsets = [...tL];
                         }
                         else if (isCrossing) { tL.reverse(); currentOffsets = [...tL]; } 
-                        else if (isChicaneEntry) { 
-                            tL = sL.map(off => off * 0.25); 
-                            currentOffsets = [...tL]; 
-                        } 
-                        else if (isChicaneMiddle) {
-                            tL = [...sL];
-                        }
+                        else if (isChicaneEntry) { tL = sL.map(off => off * 0.25); currentOffsets = [...tL]; } 
+                        else if (isChicaneMiddle) { tL = [...sL]; }
                         else if (isChicaneExit) { 
                             tL = sL.map((val, i) => {
                                 const magnitude = Math.abs(standardOffsets[i]);
@@ -4518,6 +4530,9 @@
                             tL = [...standardOffsets];
                             if (p.invert) tL.reverse();
                             currentOffsets = [...tL];
+                        }
+                        else if (isSqueeze) {
+                            tL = [...sL];
                         }
                         
                         const d12 = [], d21 = [];
@@ -4563,15 +4578,21 @@
                                 cL.push(sL[j] + (tL[j] - sL[j]) * mixT);
                             }
 
+                            if (isSqueeze) {
+                                const squeezeProfile = Math.sin(t * Math.PI);
+                                const narrowRatio = 1.0 - 0.78 * (squeezeProfile * squeezeProfile);
+                                cL = sL.map(off => off * narrowRatio);
+                            }
+
                             const pcd = (currentLaneSpacing / 2) + currentLaneSpacing;
                             const poe = pcd + (currentTrackWidth / 2 + 1) / 2;
                             let cPit = null, cTWL = startHalfL + (endHalfL - startHalfL)*mixT, cTWR = startHalfR + (endHalfR - startHalfR)*mixT;
                             let asphShift = 0;
-                            
+
                             if (isFullChicane) {
                                 const shiftDir = p.invert ? 1 : -1;
                                 const maxShift = (currentLaneSpacing * 0.5) * shiftDir;
-                                let narrowFactor = 1.0;
+                                let narrowFactor = 0.0;
 
                                 if (t <= 0.3333) {
                                     const lt = easeSine(t / 0.3333);
@@ -4587,7 +4608,8 @@
                                     narrowFactor = 1.0 - lt;
                                 }
 
-                                cL = standardOffsets.map(off => off * (1.0 - 0.65 * narrowFactor) + asphShift);
+                                // CRÍTICO: Usar sL (que respeta si los carriles vienen invertidos tras un Cruce en X) en lugar de standardOffsets
+                                cL = sL.map(off => off * (1.0 - 0.65 * narrowFactor) + asphShift);
                                 cTWL = stdHalfL * (1.0 - 0.42 * narrowFactor);
                                 cTWR = stdHalfR * (1.0 - 0.42 * narrowFactor);
                             } else if (isAdvChicaneIn) {
@@ -4609,7 +4631,7 @@
                                     cTWL = 0.2 * (1.0 - mixT) + stdHalfL * mixT;
                                 }
                             }
-
+                            
                             if (isPitEntry) { const sp = pitDir * (currentLaneSpacing/2), ep = pitDir * pcd, e = t*t*(3-2*t); cPit = sp + (ep-sp)*e; if(pitSide==='right') cTWR = endHalfR + (poe-endHalfR)*e; else cTWL = endHalfL + (poe-endHalfL)*e; }
                             else if (isPitExit) { const sp = pitDir * pcd, ep = pitDir * (currentLaneSpacing/2), e = t*t*(3-2*t); cPit = sp + (ep-sp)*e; if(pitSide==='right') cTWR = poe - (poe-endHalfR)*e; else cTWL = poe - (poe-endHalfL)*e; }
                             else if (p.subtype && p.subtype.includes('pit_parallel')) { cPit = pitDir * pcd; if(pitSide==='right') cTWR = poe; else cTWL = poe; }
@@ -5887,8 +5909,8 @@
                         const boardW = size.x + boardMargin;
                         const boardD = size.z + boardMargin;
                         
-                        // Tablero con textura estilo asfalto Ninco pero en verde oscuro
-                        const boardTopTex = createAsphaltTexture(renderer, '#081a0c'); 
+                        // Tablero con textura verde césped maqueta bien iluminado
+                        const boardTopTex = createAsphaltTexture(renderer, '#194522'); 
                         boardTopTex.repeat.set(boardW / 50, boardD / 50); // Mayor densidad de grano para que se vea bien
                         const woodTex = createWoodTexture();
                         woodTex.repeat.set(Math.max(boardW, boardD) / 50, 1);
@@ -5897,7 +5919,7 @@
                         // OPTIMIZACIÓN: Material Lambert en lugar de Standard
                         const topMat = new THREE.MeshLambertMaterial({ 
                             map: boardTopTex,
-                            color: 0xcccccc
+                            color: 0xffffff
                         }); 
                         const sideMat = new THREE.MeshLambertMaterial({ map: woodTex }); 
                         const bottomMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
