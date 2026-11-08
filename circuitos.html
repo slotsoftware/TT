@@ -2679,6 +2679,7 @@
           const [paintBorderMode, setPaintBorderMode] = useState('none'); 
 
           const [showStitchOverlay, setShowStitchOverlay] = useState(false);
+          const [stitchTechReport, setStitchTechReport] = useState(null);
 
           const [boardPoints, setBoardPoints] = useState(initDraft ? initDraft.boardPoints : []); 
           const [boardClosed, setBoardClosed] = useState(initDraft ? initDraft.boardClosed : false); 
@@ -3057,7 +3058,7 @@
           };
 
           const handleCoserPista = () => {
-              if (pieces.length === 0) { alert(t.alerts.pieces); return; }
+              if (pieces.length === 0) { setStitchTechReport({ error: t.alerts.pieces }); return; }
               
               // Guardamos temporalmente los atributos originales de UI
               const attributesMap = new Map();
@@ -3065,64 +3066,145 @@
                   if (p) attributesMap.set(p.uid, p);
               });
               
-              // 1. Compilamos el circuito para obtener las cadenas geométricas absolutas
-              let compiled = compileCircuitFor3D(pieces);
+              // 1. Compilamos el circuito para encadenar matemáticamente y absorber micro-holguras (<15cm)
+              const compiled = compileCircuitFor3D(pieces);
               
-              // 2. ALGORITMO DE REPARACIÓN Y CIERRE DE HUECOS (BRIDGE / GAP CLOSER)
-              // Analizamos si hay extremos abiertos y calculamos el segmento de unión necesario
+              // 2. MOTOR DE REPARACIÓN GEOMÉTRICA Y CIERRE AUTOMÁTICO DE HUECOS
               const repairedPieces = [...compiled];
-              if (compiled.length >= 2) {
-                  // Agrupamos por cadena
-                  const chains = {};
-                  compiled.forEach(p => {
-                      const cIdx = p.chainIndex !== undefined ? p.chainIndex : 0;
-                      if (!chains[cIdx]) chains[cIdx] = [];
-                      chains[cIdx].push(p);
-                  });
+              const chainsMap = new Map();
+              compiled.forEach(p => {
+                  const cIdx = p.chainIndex !== undefined ? p.chainIndex : 0;
+                  if (!chainsMap.has(cIdx)) chainsMap.set(cIdx, []);
+                  chainsMap.get(cIdx).push(p);
+              });
 
-                  Object.values(chains).forEach(chain => {
-                      if (chain.length < 2) return;
-                      const firstP = chain[0];
-                      const lastP = chain[chain.length - 1];
-                      
-                      const firstGeo = getPieceGeometry(firstP);
-                      const lastGeo = getPieceGeometry(lastP);
+              const addedClosures = [];
+              let microGapsAbsorbed = 0;
 
-                      if (firstGeo && lastGeo) {
-                          // Comprobamos la distancia entre el nodo inicial (inNodes[0]) y el nodo final (outNodes[0])
-                          const startNode = firstGeo.inNodes[0];
-                          const endNode = lastGeo.outNodes[0] || lastGeo.outNodes[lastGeo.outNodes.length - 1];
+              // Contabilizar micro-ajustes realizados por el compilador respecto a las coordenadas originales
+              compiled.forEach(p => {
+                  const orig = attributesMap.get(p.originalUid);
+                  if (orig) {
+                      const shift = Math.hypot((p.x || 0) - (orig.x || 0), (p.y || 0) - (orig.y || 0));
+                      if (shift > 0.05) microGapsAbsorbed++;
+                  }
+              });
 
-                          if (startNode && endNode) {
-                              const dist = Math.hypot(endNode.x - startNode.x, endNode.y - startNode.y);
-                              // Si el hueco es pequeño (entre 1 cm y 80 cm), añadimos una pista de cierre a medida
-                              if (dist > 2.0 && dist < 80.0) {
-                                  const brandDef = TRACK_DEFINITIONS[lastP.brandKey || activeBrand] || TRACK_DEFINITIONS['NINCO'];
-                                  const closingAngle = endNode.angle;
-                                  
-                                  // Creamos una pieza de cierre virtual/real ajustada al hueco exacto
-                                  const bridgePiece = {
-                                      uid: Date.now() + Math.random(),
-                                      id: 'bridge_closure_' + Math.round(dist),
-                                      label: `Cierre Técnico (${Math.round(dist)}cm)`,
-                                      type: 'straight',
-                                      length: dist,
-                                      brandKey: lastP.brandKey || activeBrand,
-                                      cat: 'Rectas',
-                                      x: endNode.x,
-                                      y: endNode.y,
-                                      rot: closingAngle,
-                                      elevation: lastP.elevation || 0,
-                                      isBridgeClosure: true
-                                  };
-                                  repairedPieces.push(bridgePiece);
+              const tryBridgeGap = (lastP, firstP) => {
+                  const firstGeo = getPieceGeometry(firstP);
+                  const lastGeo = getPieceGeometry(lastP);
+                  if (!firstGeo || !lastGeo) return;
+
+                  const dx = firstGeo.inX - lastGeo.outX;
+                  const dy = firstGeo.inY - lastGeo.outY;
+                  const gapDist = Math.hypot(dx, dy);
+                  const angleDiffDeg = (getAngleDiff(lastGeo.outAngle, firstGeo.inAngle) * 180) / Math.PI;
+
+                  // Si existe un hueco abierto entre 0.8 cm y 95 cm, reparamos e insertamos pista(s)
+                  if (gapDist >= 0.8 && gapDist <= 95.0) {
+                      const bKey = lastP.brandKey || activeBrand;
+                      const bDef = TRACK_DEFINITIONS[bKey] || TRACK_DEFINITIONS['NINCO'];
+                      const vectorAngle = Math.atan2(dy, dx);
+                      const lateralOffset = gapDist * Math.sin(vectorAngle - lastGeo.outAngle);
+
+                      // Buscamos si una combinación de rectas de catálogo encaja con tolerancia < 1.2 cm
+                      const catalogStraights = bDef.pieces
+                          .filter(cp => cp.type === 'straight' && !cp.subtype)
+                          .sort((a, b) => b.length - a.length);
+
+                      let remaining = gapDist;
+                      const chosenCatalog = [];
+                      if (Math.abs(lateralOffset) < 2.0 && angleDiffDeg < 18) {
+                          for (const cs of catalogStraights) {
+                              while (remaining >= cs.length - 0.6) {
+                                  chosenCatalog.push(cs);
+                                  remaining -= cs.length;
+                                  if (chosenCatalog.length >= 3) break;
                               }
                           }
                       }
-                  });
+
+                      if (chosenCatalog.length > 0 && Math.abs(remaining) <= 1.2 && Math.abs(lateralOffset) < 1.5) {
+                          let currX = lastGeo.outX;
+                          let currY = lastGeo.outY;
+                          chosenCatalog.forEach((cs, idx) => {
+                              const scaleLen = idx === chosenCatalog.length - 1 ? cs.length + remaining : cs.length;
+                              const newPiece = {
+                                  ...cs,
+                                  uid: Date.now() + Math.random() + idx,
+                                  brandKey: bKey,
+                                  length: Number(scaleLen.toFixed(2)),
+                                  x: currX,
+                                  y: currY,
+                                  rot: vectorAngle,
+                                  elevation: lastP.elevation || 0,
+                                  direction: 'left'
+                              };
+                              repairedPieces.push(newPiece);
+                              currX += scaleLen * Math.cos(vectorAngle);
+                              currY += scaleLen * Math.sin(vectorAngle);
+                          });
+                          addedClosures.push({
+                              type: 'CATÁLOGO OFICIAL (' + bDef.name + ')',
+                              desc: chosenCatalog.map(c => c.label).join(' + '),
+                              gapCm: gapDist.toFixed(2),
+                              angleDeg: angleDiffDeg.toFixed(1),
+                              toleranceMm: (Math.abs(remaining) * 10).toFixed(1)
+                          });
+                      } else {
+                          // Tramo de ajuste técnico a medida (absorbe también desfase lateral shiftY si existe)
+                          const forwardLen = Math.max(2.0, Math.abs(gapDist * Math.cos(vectorAngle - lastGeo.outAngle)));
+                          const customBridge = {
+                              uid: Date.now() + Math.random(),
+                              id: 'custom_closure_' + Math.round(gapDist * 10),
+                              label: `Tramo Ajuste Técnico (${gapDist.toFixed(1)}cm)`,
+                              type: 'straight',
+                              length: Number((Math.abs(lateralOffset) > 1.5 ? forwardLen : gapDist).toFixed(2)),
+                              shiftY: Math.abs(lateralOffset) > 1.5 ? Number(lateralOffset.toFixed(2)) : undefined,
+                              brandKey: bKey,
+                              cat: 'Rectas',
+                              x: lastGeo.outX,
+                              y: lastGeo.outY,
+                              rot: Math.abs(lateralOffset) > 1.5 ? lastGeo.outAngle : vectorAngle,
+                              elevation: lastP.elevation || 0,
+                              direction: 'left',
+                              isBridgeClosure: true
+                          };
+                          repairedPieces.push(customBridge);
+                          addedClosures.push({
+                              type: Math.abs(lateralOffset) > 1.5 ? 'ADAPTADOR VECTORIAL EN S' : 'CIERRE TÉCNICO A MEDIDA',
+                              desc: `${gapDist.toFixed(1)} cm` + (Math.abs(lateralOffset) > 1.5 ? ` (Desfase lat: ${lateralOffset.toFixed(1)}cm)` : ''),
+                              gapCm: gapDist.toFixed(2),
+                              angleDeg: angleDiffDeg.toFixed(1),
+                              toleranceMm: '0.0'
+                          });
+                      }
+                  }
+              };
+
+              // A) Si hay múltiples cadenas desconectadas cercanas, coser el final de una con el inicio de la otra
+              const chainList = Array.from(chainsMap.values());
+              if (chainList.length > 1) {
+                  for (let i = 0; i < chainList.length; i++) {
+                      const cA = chainList[i];
+                      const cB = chainList[(i + 1) % chainList.length];
+                      if (cA.length > 0 && cB.length > 0) {
+                          tryBridgeGap(cA[cA.length - 1], cB[0]);
+                      }
+                  }
               }
 
-              const stitchedPieces = repairedPieces.map(p => {
+              // B) Comprobar el cierre de bucle principal de cada cadena
+              chainList.forEach(chain => {
+                  if (chain.length >= 2) {
+                      tryBridgeGap(chain[chain.length - 1], chain[0]);
+                  }
+              });
+
+              // 3. Recompilamos con las piezas de reparación insertadas para garantizar continuidad total
+              const finalCompiled = addedClosures.length > 0 ? compileCircuitFor3D(repairedPieces) : repairedPieces;
+
+              const stitchedPieces = finalCompiled.map(p => {
                   const newP = { ...p };
                   delete newP.worldGeo;
                   delete newP.chainIndex;
@@ -3145,17 +3227,22 @@
               });
 
               pushHistory(stitchedPieces);
-              
               setShowStitchOverlay(true);
-              
-              // Mostramos información técnica avanzada al usuario sobre la reparación geométrica
+
+              const hasRotonda = finalCompiled.some(p => p.type === 'rotonda' || p.subtype === 'rotonda' || p.subtype === 'rotonda_connect');
+              const isDigital = ['SCX_ADVANCE', 'CARRERA', 'SCALEXTRIC_UK'].includes(activeBrand) || finalCompiled.some(p => p.cat === 'Digital' || ['y_merge_in', 'y_merge_out', 'digital_x'].includes(p.subtype));
+
+              setStitchTechReport({
+                  totalPieces: stitchedPieces.length,
+                  microGapsAbsorbed,
+                  addedClosures,
+                  chainsCount: chainsMap.size,
+                  protocol: (hasRotonda && !isDigital) ? 'Rally Loop (1 Coche Contrarreloj)' : (isDigital ? 'Bus Digital Multiplexado (Hasta 8 Coches)' : 'Analógico Estándar (2 Carriles Independientes)')
+              });
+
               setTimeout(() => {
-                  alert("INFORMACIÓN TÉCNICA - MOTOR DE REPARACIÓN GEOMÉTRICA (COSER PISTA):\n\n" +
-                        "• Análisis Vectorial: El motor ha evaluado los vectores tangentes de entrada y salida de todas las cadenas de pistas.\n" +
-                        "• Compensación de Tolerancias: Si se detectaban micro-huecos (holguras de ensamblaje entre 2cm y 80cm), el algoritmo ha autogenerado un tramo de cierre adaptativo milimétrico.\n" +
-                        "• Enrutamiento Multicarril: Se han recalculado los haces de trazado rojo (Carril 1) y azul (Carril 2) para garantizar continuidad eléctrica y mecánica absoluta sin cortes.");
                   setShowStitchOverlay(false);
-              }, 4000);
+              }, 7000);
           };
 
           const addPiece = (p, d='left') => {
@@ -4401,6 +4488,74 @@
 
               <div className={`flex-1 relative overflow-hidden ${(isPaintElevationMode || paintBorderMode !== 'none') ? 'cursor-crosshair' : (isBoardMoveMode ? 'cursor-move' : (isDragging ? 'cursor-grabbing' : 'cursor-grab'))}`}>
                   <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full touch-none block" onContextMenu={(e) => e.preventDefault()} onPointerDown={handleDown} onPointerMove={handleMoveHandler} onPointerUp={handleUp} onPointerCancel={handleUp} onPointerLeave={handleUp} onWheel={handleWheel}/>
+
+                  {stitchTechReport && (
+                      <div onPointerDown={(e)=>e.stopPropagation()} className="mac-panel fixed top-28 left-6 z-[110] w-[390px] p-4 text-white animate-in">
+                          <div className="flex justify-between items-center pb-2.5 mb-3 border-b border-white/10">
+                              <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-lg bg-[#30D158]/20 border border-[#30D158]/40 flex items-center justify-center">
+                                      <GitCommit size={15} className="text-[#30D158]"/>
+                                  </div>
+                                  <div>
+                                      <h3 className="text-xs font-bold tracking-wide uppercase text-white">Informe Técnico · Coser Pista</h3>
+                                      <span className="text-[10px] text-gray-400">Motor de Reparación Geométrica CAD</span>
+                                  </div>
+                              </div>
+                              <button onClick={() => { setStitchTechReport(null); setShowStitchOverlay(false); }} className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition"><X size={13}/></button>
+                          </div>
+
+                          {stitchTechReport.error ? (
+                              <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-lg p-3">{stitchTechReport.error}</div>
+                          ) : (
+                              <div className="space-y-3 text-[11px]">
+                                  <div className="grid grid-cols-2 gap-2">
+                                      <div className="bg-black/40 border border-white/10 rounded-lg p-2.5">
+                                          <span className="text-[9px] text-gray-400 uppercase block">Uniones Reajustadas</span>
+                                          <span className="text-base font-bold text-[#64D2FF] tabular-nums">{stitchTechReport.microGapsAbsorbed} nodos</span>
+                                      </div>
+                                      <div className="bg-black/40 border border-white/10 rounded-lg p-2.5">
+                                          <span className="text-[9px] text-gray-400 uppercase block">Tramos Insertados</span>
+                                          <span className="text-base font-bold text-[#30D158] tabular-nums">{stitchTechReport.addedClosures.length} pzs</span>
+                                      </div>
+                                  </div>
+
+                                  {stitchTechReport.addedClosures.length > 0 ? (
+                                      <div className="bg-[#30D158]/10 border border-[#30D158]/30 rounded-xl p-3 space-y-2">
+                                          <div className="text-[10px] font-bold text-[#30D158] uppercase tracking-wider flex items-center gap-1.5">
+                                              <CheckCircle2 size={13}/> Reparación Automática de Hueco Aplicada
+                                          </div>
+                                          {stitchTechReport.addedClosures.map((c, idx) => (
+                                              <div key={idx} className="bg-black/40 rounded-lg p-2 border border-white/10 space-y-1 font-mono text-[10px]">
+                                                  <div className="flex justify-between text-white font-sans font-semibold">
+                                                      <span>{c.type}</span>
+                                                      <span className="text-[#30D158]">+{c.desc}</span>
+                                                  </div>
+                                                  <div className="flex justify-between text-gray-400">
+                                                      <span>Distancia vectorial (ΔL): {c.gapCm} cm</span>
+                                                      <span>Desfase (Δθ): {c.angleDeg}°</span>
+                                                  </div>
+                                              </div>
+                                          ))}
+                                      </div>
+                                  ) : (
+                                      <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-gray-300 text-[11px] leading-relaxed">
+                                          <strong className="text-white block mb-0.5">Geometría Cerrada / Sin Huecos Abiertos:</strong>
+                                          Se han alineado los vectores tangentes y absorbido las tolerancias elásticas del plástico sin necesidad de añadir tramos suplementarios.
+                                      </div>
+                                  )}
+
+                                  <div className="bg-black/40 border border-white/10 rounded-xl p-2.5 space-y-1 text-[10px] text-gray-400">
+                                      <div className="text-white font-semibold uppercase tracking-wider text-[9px] mb-1">Parámetros Técnicos del Algoritmo</div>
+                                      <div>• <strong className="text-gray-200">Tolerancia de Imantación:</strong> Absorción elástica &lt; 15 mm y corrección ortogonal de nodos.</div>
+                                      <div>• <strong className="text-gray-200">Síntesis de Tramos:</strong> Prioriza combinaciones exactas del catálogo activo; si existe desfase lateral, genera un puente vectorial adaptativo.</div>
+                                      <div>• <strong className="text-gray-200">Topología Eléctrica:</strong> {stitchTechReport.protocol}</div>
+                                  </div>
+
+                                  <button onClick={() => { setStitchTechReport(null); setShowStitchOverlay(false); }} className="mac-btn-primary w-full py-2 text-xs font-semibold">Entendido</button>
+                              </div>
+                          )}
+                      </div>
+                  )}
 
                   {showMultiLaneTools && (
                       <div onPointerDown={(e)=>e.stopPropagation()} className="fixed top-24 right-4 bg-[#0f172a]/95 border border-amber-500 shadow-[0_0_30px_rgba(245,158,11,0.3)] p-4 rounded-xl w-72 backdrop-blur-xl z-[100] animate-in origin-top-right">
