@@ -2279,8 +2279,14 @@
                                 
                                 let flatMultiplier = 1.0;
                                 flatZones.forEach(fz => {
-                                    let distToStart = queryDist - fz.start; if (distToStart < -totalTrackLength/2) distToStart += totalTrackLength; if (distToStart > totalTrackLength/2) distToStart -= totalTrackLength;
-                                    let distToEnd = dist - fz.end; if (distToEnd < -totalTrackLength/2) distToEnd += totalTrackLength; if (distToEnd > totalTrackLength/2) distToEnd -= totalTrackLength;
+                                    let distToStart = queryDist - fz.start;
+                                    if (distToStart < -totalTrackLength / 2) distToStart += totalTrackLength;
+                                    if (distToStart > totalTrackLength / 2) distToStart -= totalTrackLength;
+                                    
+                                    let distToEnd = queryDist - fz.end;
+                                    if (distToEnd < -totalTrackLength / 2) distToEnd += totalTrackLength;
+                                    if (distToEnd > totalTrackLength / 2) distToEnd -= totalTrackLength;
+
                                     let fzLength = fz.end - fz.start;
                                     let isInZone = distToStart >= 0 && distToStart <= fzLength;
                                     
