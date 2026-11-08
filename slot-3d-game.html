@@ -1573,29 +1573,50 @@
             const getHeadlightBeamTexture = () => {
                 if (window.headlightBeamTex) return window.headlightBeamTex;
                 const canvas = document.createElement('canvas');
-                canvas.width = 256; canvas.height = 512;
+                canvas.width = 512; canvas.height = 512;
                 const ctx = canvas.getContext('2d');
-                ctx.clearRect(0, 0, 256, 512);
-                // Doble cono proyectado en el asfalto
-                const drawBeam = (cx) => {
-                    const grad = ctx.createRadialGradient(cx, 490, 4, cx, 220, 240);
-                    grad.addColorStop(0.0, 'rgba(235, 248, 255, 0.95)');
-                    grad.addColorStop(0.25, 'rgba(180, 225, 255, 0.55)');
-                    grad.addColorStop(0.65, 'rgba(100, 175, 255, 0.15)');
+                ctx.clearRect(0, 0, 512, 512);
+                
+                // Doble haz difuminado cálido y realista sobre el asfalto (sin bordes duros de cono)
+                const drawSoftBeam = (cx) => {
+                    ctx.save();
+                    ctx.translate(cx, 485);
+                    ctx.scale(1.0, 2.3);
+                    const grad = ctx.createRadialGradient(0, 0, 2, 0, -95, 145);
+                    grad.addColorStop(0.0, 'rgba(255, 250, 235, 0.85)');
+                    grad.addColorStop(0.22, 'rgba(255, 240, 205, 0.48)');
+                    grad.addColorStop(0.55, 'rgba(255, 225, 175, 0.14)');
                     grad.addColorStop(1.0, 'rgba(0, 0, 0, 0)');
                     ctx.fillStyle = grad;
                     ctx.beginPath();
-                    ctx.moveTo(cx - 12, 505);
-                    ctx.lineTo(cx - 115, 10);
-                    ctx.lineTo(cx + 115, 10);
-                    ctx.lineTo(cx + 12, 505);
-                    ctx.closePath();
+                    ctx.arc(0, -85, 145, 0, Math.PI * 2);
                     ctx.fill();
+                    ctx.restore();
                 };
-                drawBeam(88);
-                drawBeam(168);
+                drawSoftBeam(195);
+                drawSoftBeam(317);
+
                 const tex = new THREE.CanvasTexture(canvas);
                 window.headlightBeamTex = tex;
+                return tex;
+            };
+
+            // Textura de halo difuminado suave (para faros delanteros cálidos y pilotos traseros rojos)
+            const getSoftLightGlowTexture = (r, g, b) => {
+                const key = `glow_${r}_${g}_${b}`;
+                if (window[key]) return window[key];
+                const canvas = document.createElement('canvas');
+                canvas.width = 128; canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                const grad = ctx.createRadialGradient(64, 64, 2, 64, 64, 62);
+                grad.addColorStop(0.0, `rgba(255, 255, 255, 1.0)`);
+                grad.addColorStop(0.2, `rgba(${r}, ${g}, ${b}, 0.85)`);
+                grad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.30)`);
+                grad.addColorStop(1.0, `rgba(${r}, ${g}, ${b}, 0.0)`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 128, 128);
+                const tex = new THREE.CanvasTexture(canvas);
+                window[key] = tex;
                 return tex;
             };
 
@@ -3573,14 +3594,16 @@
                                     const model = vg.children[0]; 
                                     if(model.userData.baseScale) model.scale.copy(model.userData.baseScale).multiplyScalar(cas.scale); 
                                 }
-                                // Destello sutil y realista de luces de freno sin quemar la parte trasera
+                                // Control dinámico de pilotos traseros difuminados (posición nocturna + luz de freno)
                                 const carBraking = (ci === myCarIdx) ? isBraking : (car.speed > targetSpeed + 12);
                                 if (vg.userData.tailMat) {
-                                    vg.userData.tailMat.opacity = isNightModeRef.current ? (carBraking ? 0.85 : 0.35) : (carBraking ? 0.75 : 0.0);
-                                    vg.userData.tailMat.color.setHex(carBraking ? 0xff1100 : 0x880000);
+                                    vg.userData.tailMat.opacity = isNightModeRef.current ? (carBraking ? 1.0 : 0.72) : (carBraking ? 0.85 : 0.0);
+                                }
+                                if (vg.userData.tailGroundMat) {
+                                    vg.userData.tailGroundMat.opacity = isNightModeRef.current ? (carBraking ? 0.65 : 0.32) : (carBraking ? 0.38 : 0.0);
                                 }
                                 if (vg.userData.tailLight) {
-                                    vg.userData.tailLight.intensity = isNightModeRef.current ? (carBraking ? 0.65 : 0.18) : (carBraking ? 0.35 : 0);
+                                    vg.userData.tailLight.intensity = isNightModeRef.current ? (carBraking ? 1.35 : 0.55) : (carBraking ? 0.6 : 0);
                                 }
                             } else if (vg && car.crashed) {
                                  vg.rotation.set(0,0,0);
@@ -3993,12 +4016,12 @@
                     const vg = pg.children[0];
                     if (vg) {
                         vg.traverse(child => {
-                            if (child.name === "HEADLIGHT") child.intensity = isNight ? 6.5 : 0;
-                            if (child.name === "TAILLIGHT") child.intensity = isNight ? 0.2 : 0;
-                            if (child.name === "HEADLIGHT_CONE") child.visible = isNight;
+                            if (child.name === "HEADLIGHT") child.intensity = isNight ? 5.2 : 0;
+                            if (child.name === "TAILLIGHT") child.intensity = isNight ? 0.55 : 0;
                             if (child.name === "HEADLIGHT_GROUND_BEAM") child.visible = isNight;
-                            if (child.material && child.material.name === "GLOW_HEAD") child.material.opacity = isNight ? 1.0 : 0.15;
-                            if (child.material && child.material.name === "GLOW_TAIL") child.material.opacity = isNight ? 0.35 : 0;
+                            if (child.name === "TAILLIGHT_GROUND_GLOW") child.visible = isNight;
+                            if (child.material && child.material.name === "GLOW_HEAD") child.material.opacity = isNight ? 0.92 : 0.0;
+                            if (child.material && child.material.name === "GLOW_TAIL") child.material.opacity = isNight ? 0.72 : 0.0;
                         });
                     }
                 });
@@ -4076,80 +4099,110 @@
                         lightsGroup.name = "CarLightsGroup";
 
                         const isNight = isNightModeRef.current;
-                        const hlIntensity = isNight ? 6.5 : 0;
-                        const tlIntensity = isNight ? 0.2 : 0;
+                        const hlIntensity = isNight ? 5.2 : 0;
+                        const tlIntensity = isNight ? 0.55 : 0;
 
-                        // 1. Faro SpotLight de largo alcance que ilumina el asfalto y guardarraíles por delante del coche
-                        const hlSpot = new THREE.SpotLight(0xe0f2fe, hlIntensity, 165, Math.PI / 3.2, 0.45, 1.1);
-                        hlSpot.position.set(0, finalSize.y * 0.42, -finalSize.z * 0.45);
+                        // Coordenadas exactas del morro (-Z) y de la parte trasera (+Z) fuera de la carrocería para que no queden tapadas
+                        const frontZ = -finalSize.z * 0.76;
+                        const rearZ = finalSize.z * 0.29;
+                        const lightY = Math.max(0.55, finalSize.y * 0.34);
+
+                        // 1. Faro SpotLight blanco cálido hacia adelante (sin geometría de cono visible)
+                        const hlSpot = new THREE.SpotLight(0xfff4e0, hlIntensity, 165, Math.PI / 3.2, 0.75, 1.2);
+                        hlSpot.position.set(0, lightY + 0.3, frontZ);
                         hlSpot.name = "HEADLIGHT";
                         const hlTarget = new THREE.Object3D();
-                        hlTarget.position.set(0, -0.5, -finalSize.z * 6.5);
+                        hlTarget.position.set(0, -0.3, frontZ - 48);
                         lightsGroup.add(hlTarget);
                         hlSpot.target = hlTarget;
                         lightsGroup.add(hlSpot);
 
-                        // 2. Luz roja trasera muy suave y de corto alcance (evita deslumbrar la cámara trasera)
-                        const tlLight = new THREE.PointLight(0xff1100, tlIntensity, 6, 2.0);
-                        tlLight.position.set(0, finalSize.y * 0.32, finalSize.z * 0.32);
-                        tlLight.name = "TAILLIGHT";
-                        lightsGroup.add(tlLight);
-
-                        // 3. Conos volumétricos 3D para que los haces de luz de los faros se vean cortar la noche
-                        const coneGeo = new THREE.ConeGeometry(4.2, 34, 16, 1, true);
-                        coneGeo.translate(0, -17, 0);
-                        coneGeo.rotateX(-Math.PI / 2);
-                        const coneMat = new THREE.MeshBasicMaterial({
-                            color: 0xbAe6fd,
+                        // 2. Halos difuminados cálidos en los dos faros delanteros (Sprites suaves sin bordes)
+                        const warmFlareTex = getSoftLightGlowTexture(255, 238, 200);
+                        const headGlowMat = new THREE.SpriteMaterial({
+                            map: warmFlareTex,
+                            color: 0xfff5e4,
                             transparent: true,
-                            opacity: 0.16,
+                            opacity: isNight ? 0.92 : 0.0,
                             blending: THREE.AdditiveBlending,
-                            side: THREE.DoubleSide,
                             depthWrite: false
                         });
-                        const coneL = new THREE.Mesh(coneGeo, coneMat);
-                        coneL.position.set(finalSize.x * 0.32, finalSize.y * 0.28, -finalSize.z * 0.58);
-                        coneL.name = "HEADLIGHT_CONE";
-                        coneL.visible = isNight;
-                        lightsGroup.add(coneL);
+                        headGlowMat.name = "GLOW_HEAD";
 
-                        const coneR = new THREE.Mesh(coneGeo, coneMat);
-                        coneR.position.set(-finalSize.x * 0.32, finalSize.y * 0.28, -finalSize.z * 0.58);
-                        coneR.name = "HEADLIGHT_CONE";
-                        coneR.visible = isNight;
-                        lightsGroup.add(coneR);
+                        const hgL = new THREE.Sprite(headGlowMat);
+                        hgL.scale.set(2.2, 2.2, 1);
+                        hgL.position.set(finalSize.x * 0.32, lightY, frontZ - 0.15);
+                        lightsGroup.add(hgL);
 
-                        // 4. Proyección de luz directa sobre el asfalto (garantiza visibilidad extrema del haz sobre la pista)
+                        const hgR = new THREE.Sprite(headGlowMat);
+                        hgR.scale.set(2.2, 2.2, 1);
+                        hgR.position.set(-finalSize.x * 0.32, lightY, frontZ - 0.15);
+                        lightsGroup.add(hgR);
+
+                        // 3. Proyección difuminada cálida sobre el asfalto delante del coche
                         const beamTex = getHeadlightBeamTexture();
-                        const groundBeamGeo = new THREE.PlaneGeometry(18, 46);
+                        const groundBeamGeo = new THREE.PlaneGeometry(19, 44);
                         groundBeamGeo.rotateX(-Math.PI / 2);
                         const groundBeamMat = new THREE.MeshBasicMaterial({
                             map: beamTex,
                             transparent: true,
-                            opacity: 0.85,
+                            opacity: 0.78,
                             blending: THREE.AdditiveBlending,
                             depthWrite: false
                         });
                         const groundBeamMesh = new THREE.Mesh(groundBeamGeo, groundBeamMat);
-                        groundBeamMesh.position.set(0, 0.16, -finalSize.z * 0.65 - 22);
+                        groundBeamMesh.position.set(0, 0.14, frontZ - 21);
                         groundBeamMesh.name = "HEADLIGHT_GROUND_BEAM";
                         groundBeamMesh.visible = isNight;
                         lightsGroup.add(groundBeamMesh);
-                        // 5. Ópticas LED delanteras y traseras discretas
-                        const headGlowGeo = new THREE.SphereGeometry(0.16, 8, 8);
-                        const tailGlowGeo = new THREE.SphereGeometry(0.08, 8, 8);
-                        const headGlowMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: isNight ? 1.0 : 0.15 });
-                        headGlowMat.name = "GLOW_HEAD";
-                        const tailGlowMat = new THREE.MeshBasicMaterial({ color: 0x990000, transparent: true, opacity: isNight ? 0.35 : 0 });
+
+                        // 4. Pilotos traseros rojos difuminados y cálidos (visibles desde la cámara de persecución)
+                        const redFlareTex = getSoftLightGlowTexture(255, 35, 15);
+                        const tailGlowMat = new THREE.SpriteMaterial({
+                            map: redFlareTex,
+                            color: 0xff2a15,
+                            transparent: true,
+                            opacity: isNight ? 0.72 : 0.0,
+                            blending: THREE.AdditiveBlending,
+                            depthWrite: false
+                        });
                         tailGlowMat.name = "GLOW_TAIL";
-                        
-                        const hg1 = new THREE.Mesh(headGlowGeo, headGlowMat); hg1.position.set(finalSize.x * 0.33, finalSize.y * 0.32, -finalSize.z * 0.55); lightsGroup.add(hg1);
-                        const hg2 = new THREE.Mesh(headGlowGeo, headGlowMat); hg2.position.set(-finalSize.x * 0.33, finalSize.y * 0.32, -finalSize.z * 0.55); lightsGroup.add(hg2);
-                        
-                        const tg1 = new THREE.Mesh(tailGlowGeo, tailGlowMat); tg1.position.set(finalSize.x * 0.31, finalSize.y * 0.32, finalSize.z * 0.24); lightsGroup.add(tg1);
-                        const tg2 = new THREE.Mesh(tailGlowGeo, tailGlowMat); tg2.position.set(-finalSize.x * 0.31, finalSize.y * 0.32, finalSize.z * 0.24); lightsGroup.add(tg2);
+
+                        const tgL = new THREE.Sprite(tailGlowMat);
+                        tgL.scale.set(2.1, 1.45, 1);
+                        tgL.position.set(finalSize.x * 0.30, lightY + 0.05, rearZ + 0.25);
+                        lightsGroup.add(tgL);
+
+                        const tgR = new THREE.Sprite(tailGlowMat);
+                        tgR.scale.set(2.1, 1.45, 1);
+                        tgR.position.set(-finalSize.x * 0.30, lightY + 0.05, rearZ + 0.25);
+                        lightsGroup.add(tgR);
+
+                        // 5. Reflejo rojo difuso sobre el asfalto justo detrás del parachoques trasero
+                        const tailGroundGeo = new THREE.PlaneGeometry(finalSize.x * 1.9, 6.5);
+                        tailGroundGeo.rotateX(-Math.PI / 2);
+                        const tailGroundMat = new THREE.MeshBasicMaterial({
+                            map: redFlareTex,
+                            color: 0xff1e00,
+                            transparent: true,
+                            opacity: isNight ? 0.32 : 0.0,
+                            blending: THREE.AdditiveBlending,
+                            depthWrite: false
+                        });
+                        const tailGroundMesh = new THREE.Mesh(tailGroundGeo, tailGroundMat);
+                        tailGroundMesh.position.set(0, 0.14, rearZ + 2.2);
+                        tailGroundMesh.name = "TAILLIGHT_GROUND_GLOW";
+                        tailGroundMesh.visible = isNight;
+                        lightsGroup.add(tailGroundMesh);
+
+                        // Punto de luz rojo suave para iluminar la zaga del coche
+                        const tlLight = new THREE.PointLight(0xff2200, tlIntensity, 10, 1.8);
+                        tlLight.position.set(0, lightY + 0.2, rearZ + 0.6);
+                        tlLight.name = "TAILLIGHT";
+                        lightsGroup.add(tlLight);
 
                         container.userData.tailMat = tailGlowMat;
+                        container.userData.tailGroundMat = tailGroundMat;
                         container.userData.tailLight = tlLight;
 
                         templateGroup.add(lightsGroup);
